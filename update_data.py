@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """AI-Infra 10-Factor Screen - weekly data refresh.
-Recomputes all 10 measured factors for the universe and writes data.json.
+Recomputes all 10 measured factors + financials for the universe, writes data.json.
 Run:  python update_data.py            (fresh fetch, ~4 min)
       python update_data.py --cache    (reuse cached fetch files if present)
 """
@@ -45,8 +45,28 @@ VETO={"SMCI":"DOJ export-fraud indictment (Mar-2026) + securities class actions"
       "CRWV":"Active securities-fraud class action (demand/delay misrepresentation)"}
 WT={'F1':3,'F2':2.5,'F3':3,'F4':2.5,'F5':2,'F6':2,'F7':2.5,'F8':2,'F9':1.5,'F10':1.5}
 MX={'F1':3,'F2':2,'F3':3,'F4':3,'F5':2,'F6':2,'F7':2,'F8':2,'F9':2,'F10':2}
+FULLWT=round(sum(WT.values()),1)  # 22.5
+TW={'F1':'Analysts raising estimates','F2':'Strong earnings beats','F3':'Steady price uptrend',
+    'F4':'Fast revenue growth','F5':'Expanding margins','F6':'High expected growth',
+    'F7':'Attractive valuation','F8':'Solid balance sheet','F9':'Analysts agree on value','F10':'Insiders buying'}
+HW={'F1':'Estimates being cut','F2':'Earnings misses','F3':'Weak / erratic price',
+    'F4':'Slow revenue growth','F5':'Margins compressing','F6':'Low expected growth',
+    'F7':'Stretched valuation','F8':'Dilution / debt risk','F9':'Analysts divided','F10':'Insider selling'}
 CACHE='--cache' in sys.argv
 def jload(p): return json.load(open(p)) if os.path.exists(p) else None
+
+# --- user-added tickers (change #11): any symbols listed in extra_tickers.txt
+# (one per line, '#' comments allowed) are appended to the universe and scored
+# by the exact same engine on the next refresh. ---
+def load_extra():
+    p=os.path.join(os.path.dirname(os.path.abspath(__file__)),'extra_tickers.txt')
+    if not os.path.exists(p): return []
+    have={t for t,_ in UNIVERSE}; out=[]
+    for line in open(p):
+        s=line.split('#',1)[0].strip().upper()
+        if s and s not in have: have.add(s); out.append((s,s))
+    return out
+UNIVERSE=UNIVERSE+load_extra()
 
 def fetch_prices():
     if CACHE and jload('prices.json'): return jload('prices.json')
@@ -70,14 +90,14 @@ def fetch_prices():
     json.dump(out,open('prices.json','w')); return out
 
 def fetch_fund():
-    if CACHE and jload('fund1.json') and jload('fund2.json'):
-        return {**jload('fund1.json'),**jload('fund2.json')}
+    if CACHE and jload('fund1.json'): return jload('fund1.json')
     def grab(t):
         rec={}; tk=yf.Ticker(t)
         try:
             info=tk.info
             for a,b in [('forwardPE','fpe'),('marketCap','mcap'),('totalCash','cash'),('totalDebt','debt'),('numberOfAnalystOpinions','nA')]:
                 rec[b]=info.get(a)
+            rec['fcur']=info.get('financialCurrency') or 'USD'
         except Exception: pass
         try:
             tr=tk.eps_trend
@@ -96,17 +116,39 @@ def fetch_fund():
                 except Exception: pass
             rec['rev']=[u,d]
         except Exception: rec['rev']=[0,0]
+        # quarterly income stmt -> revenue, gross profit, net income + period labels
         try:
             q=tk.quarterly_income_stmt
             if q is not None and 'Total Revenue' in q.index:
-                revq=[float(x) for x in q.loc['Total Revenue'].values[:8] if not pd.isna(x)]
-                rec['revq']=revq
+                cols=list(q.columns)
+                revq=[float(q.loc['Total Revenue',c]) for c in cols if not pd.isna(q.loc['Total Revenue',c])]
+                rec['revq']=revq[:8]
                 if 'Gross Profit' in q.index:
-                    gpq=[float(x) for x in q.loc['Gross Profit'].values[:8] if not pd.isna(x)]
+                    gpq=[float(q.loc['Gross Profit',c]) for c in cols if not pd.isna(q.loc['Gross Profit',c])]
                     n=min(len(revq),len(gpq))
                     if n>=5:
                         k=min(4,n-4)
                         rec['gm_delta_bps']=round((sum(gpq[:4])/sum(revq[:4])-sum(gpq[4:4+k])/sum(revq[4:4+k]))*10000)
+                if 'Net Income' in q.index:
+                    niq=[]; nidt=[]
+                    for c in cols:
+                        v=q.loc['Net Income',c]
+                        if not pd.isna(v): niq.append(float(v)); nidt.append(str(c)[:7])
+                    rec['niq']=niq[:6]; rec['nidt']=nidt[:6]
+        except Exception: pass
+        # annual income stmt -> latest FY revenue + net income + year
+        try:
+            a=tk.income_stmt
+            if a is not None:
+                cols=list(a.columns)
+                if 'Total Revenue' in a.index:
+                    for c in cols:
+                        v=a.loc['Total Revenue',c]
+                        if not pd.isna(v): rec['fy_rev']=float(v); rec['fy_year']=str(c)[:4]; break
+                if 'Net Income' in a.index:
+                    for c in cols:
+                        v=a.loc['Net Income',c]
+                        if not pd.isna(v): rec['fy_profit']=float(v); break
         except Exception: pass
         try:
             b=tk.quarterly_balance_sheet
@@ -126,11 +168,10 @@ def fetch_fund():
     out={}
     with ThreadPoolExecutor(max_workers=6) as ex:
         for t,rec in ex.map(grab,[t for t,_ in UNIVERSE]): out[t]=rec
-    json.dump(out,open('fund1.json','w')); json.dump({},open('fund2.json','w')); return out
+    json.dump(out,open('fund1.json','w')); return out
 
 def fetch_precise():
-    if CACHE and jload('prec1.json') and jload('prec2.json'):
-        return {**jload('prec1.json'),**jload('prec2.json')}
+    if CACHE and jload('prec1.json'): return jload('prec1.json')
     def grab(t):
         rec={}; tk=yf.Ticker(t)
         try:
@@ -159,7 +200,7 @@ def fetch_precise():
     out={}
     with ThreadPoolExecutor(max_workers=6) as ex:
         for t,rec in ex.map(grab,[t for t,_ in UNIVERSE]): out[t]=rec
-    json.dump(out,open('prec1.json','w')); json.dump({},open('prec2.json','w')); return out
+    json.dump(out,open('prec1.json','w')); return out
 
 def fetch_news():
     import urllib.request
@@ -187,6 +228,9 @@ def fetch_news():
 def pctchg(cur,old):
     if cur is None or old is None or old==0: return None
     return (cur-old)/abs(old)*100
+def qoq(a,b):
+    if a is None or b is None or b==0: return None
+    return round((a-b)/abs(b)*100,1)
 
 def score(P,F,X):
     rows=[]
@@ -225,7 +269,7 @@ def score(P,F,X):
             evsg=round(evs/max(fg if fg is not None else 3.0,3.0),2)
             f7=2 if evsg<0.3 else (1 if evsg<=0.8 else 0)
         dil=f.get('dil_yoy')
-        if isetf or (f.get('cash') is None and dil is None): f8=None; bs='—'
+        if isetf or (f.get('cash') is None and dil is None): f8=None; bs='-'
         else:
             f8=2; parts=[]
             if dil is not None:
@@ -235,7 +279,7 @@ def score(P,F,X):
             if f.get('cash') is not None and f.get('debt') is not None:
                 parts.append('net cash' if f['cash']>f['debt'] else 'net debt')
                 if f['cash']<f['debt'] and f['cash']>0 and f['debt']/max(f['cash'],1)>4: f8-=1
-            f8=max(0,f8); bs='; '.join(parts) or '—'
+            f8=max(0,f8); bs='; '.join(parts) or '-'
         disp=x.get('disp'); nA=f.get('nA')
         f9=None if (isetf or disp is None or (nA is not None and nA<4)) else (2 if disp<40 else (1 if disp<=80 else 0))
         ins=f.get('insider_net_pct'); f10=None if (isetf or ins is None) else (2 if ins>0 else (1 if ins>=-5 else 0))
@@ -244,26 +288,64 @@ def score(P,F,X):
         for k in WT:
             if sc[k] is not None: num+=WT[k]*sc[k]/MX[k]; den+=WT[k]
         r.update(sc)
+        # financials
+        niq=f.get('niq') or []; nidt=f.get('nidt') or []
+        r['fy_rev']=f.get('fy_rev'); r['fy_profit']=f.get('fy_profit'); r['fy_year']=f.get('fy_year'); r['fcur']=f.get('fcur','USD')
+        r['pq1']=qoq(niq[0],niq[1]) if len(niq)>=2 else None
+        r['pq2']=qoq(niq[1],niq[2]) if len(niq)>=3 else None
+        r['pq1lbl']=(f"{nidt[1]}\u2192{nidt[0]}" if len(nidt)>=2 else '')
+        r['pq2lbl']=(f"{nidt[2]}\u2192{nidt[1]}" if len(nidt)>=3 else '')
         r['raw']={'rev90':rev90,'updn':f'{u}/{d}','surp':sp,'ra':ra,'revg':revg,'gmd':gmd,
                   'fwdrevg':fg,'evsg':evsg,'bs':bs,'disp':disp,'ins':ins}
         r['pct']=round(num/den*100,1) if den>0 else 0; r['wsc']=round(num,2); r['dataWt']=round(den,1)
-        r['flag']='VETO' if t in VETO else ('ETF' if isetf else ('NODATA' if r['price'] is None else ''))
-        if t in VETO: r['vetoReason']=VETO[t]
+        # tailwind / headwind
+        scored={k:sc[k] for k in WT if sc[k] is not None}
+        if scored:
+            twk=max(scored,key=lambda k:scored[k]/MX[k]); hwk=min(scored,key=lambda k:scored[k]/MX[k])
+            r['tw']=TW[twk] if scored[twk]/MX[twk]>=0.5 else 'No standout strength'
+            r['hw']=HW[hwk] if scored[hwk]/MX[hwk]<=0.5 else 'No major weakness'
+        else:
+            r['tw']=None; r['hw']=None
+        # flag (consistent set)
+        if t in VETO: r['flag']='VETO'; r['vetoReason']=VETO[t]
+        elif isetf: r['flag']='ETF'
+        elif r['price'] is None or den==0: r['flag']='NO DATA'
+        elif den < FULLWT: r['flag']='PARTIAL DATA'
+        else: r['flag']='None'
         rows.append(r)
-    live=[r for r in rows if r['flag']=='']; live.sort(key=lambda r:(-r['pct'],-(r['raw']['ra'] or -9)))
-    for i,r in enumerate(live,1): r['rank']=i
-    return rows
+    scored_rows=[r for r in rows if r['flag'] in ('None','PARTIAL DATA')]
+    scored_rows.sort(key=lambda r:(-r['pct'],-(r['raw']['ra'] or -9)))
+    etf_rows=sorted([r for r in rows if r['flag']=='ETF'],key=lambda r:-r['pct'])
+    veto_rows=[r for r in rows if r['flag']=='VETO']
+    nod_rows=[r for r in rows if r['flag']=='NO DATA']
+    ordered=scored_rows+etf_rows+veto_rows+nod_rows
+    for i,r in enumerate(ordered,1): r['rank']=i
+    return ordered
 
 def main():
     print('fetching prices...'); P=fetch_prices()
     print('fetching fundamentals...'); F=fetch_fund()
     print('fetching estimates/targets...'); X=fetch_precise()
     print('scoring...'); rows=score(P,F,X)
+    # convert foreign-currency FY revenue/profit to USD so the columns are comparable
+    curs={r.get('fcur','USD') for r in rows if r.get('fcur') and r['fcur']!='USD'}
+    fx={}
+    for c in curs:
+        try:
+            h=yf.Ticker(f'{c}USD=X').history(period='5d')
+            if len(h): fx[c]=float(h['Close'].iloc[-1])
+        except Exception: pass
+    for r in rows:
+        c=r.get('fcur','USD')
+        if c!='USD' and c in fx:
+            for k in ('fy_rev','fy_profit'):
+                if r.get(k) is not None: r[k]=round(r[k]*fx[c])
+            r['fcur']='USD (from '+c+')'
     print('fetching news...'); news=fetch_news()
     for r in rows: r['news']=news.get(r['t'],[])
     now=dt.datetime.now(dt.timezone.utc)
     out={'meta':{'generated_utc':now.strftime('%Y-%m-%d %H:%M UTC'),
-                 'universe':len(rows),'weights':WT,'maxes':MX},
+                 'universe':len(rows),'weights':WT,'maxes':MX,'fullwt':FULLWT},
          'stocks':rows}
     dst=os.path.join(os.path.dirname(os.path.abspath(__file__)),'data.json')
     json.dump(out,open(dst,'w'))
