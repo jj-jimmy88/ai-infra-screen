@@ -1,211 +1,253 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Infrastructure Screen — 10-Factor Ranking</title>
+<title>AI Infrastructure Screen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0E141B;--panel:#151D27;--panel2:#1B2532;--line:#26313F;--tx:#E8EDF2;--mut:#8CA0B3;
---hi:#34D0B6;--mid:#E8A33D;--lo:#DE584F;--lnk:#5CA8EF;--spine:#2A3646}
+--hi:#34D0B6;--mid:#E8A33D;--lo:#DE584F;--lnk:#5CA8EF;--spine:#2A3646;--pur:#9A8CEF}
 *{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--tx);font:15px/1.55 "IBM Plex Sans",sans-serif}
+body{background:var(--bg);color:var(--tx);font:14.5px/1.5 "IBM Plex Sans",sans-serif}
 .mono{font-family:"IBM Plex Mono",monospace}
-header{padding:26px 22px 14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:14px;align-items:baseline}
-h1{font-size:21px;font-weight:700;letter-spacing:-.01em}
+header{padding:22px 26px 12px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 h1 .amp{color:var(--hi)}
 .meta{color:var(--mut);font-size:12.5px}
 .meta b{color:var(--tx);font-weight:600}
-.bar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 22px;border-bottom:1px solid var(--line);align-items:center;position:sticky;top:0;background:var(--bg);z-index:5}
-input[type=search]{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:8px 12px;font:inherit;width:220px}
-input[type=search]:focus{outline:2px solid var(--hi);outline-offset:1px}
-.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;color:var(--mut);padding:6px 14px;font-size:13px;cursor:pointer}
-.chip[aria-pressed=true]{color:var(--bg);background:var(--hi);border-color:var(--hi);font-weight:600}
-.chip:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;padding:12px 26px;border-bottom:1px solid var(--line);align-items:center;position:sticky;top:0;background:var(--bg);z-index:5}
+input[type=search],input.addbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:8px 12px;font:inherit}
+input[type=search]{width:210px}
+input.addbox{width:150px;text-transform:uppercase}
+input:focus{outline:2px solid var(--hi);outline-offset:1px}
+.chip{background:var(--hi);border:1px solid var(--hi);border-radius:999px;color:var(--bg);padding:6px 16px;font-size:13px;font-weight:600;cursor:default}
+.addbtn{background:var(--panel2);border:1px solid var(--hi);color:var(--hi);border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.addbtn:hover{background:var(--hi);color:var(--bg)}
+.spacer{flex:1}
 .btn{background:none;border:none;color:var(--lnk);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-main{max-width:1180px;margin:0 auto;padding:10px 14px 60px}
-table{width:100%;border-collapse:collapse}
-th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);text-align:left;padding:12px 10px 8px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+main{width:100%;padding:8px 18px 60px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);text-align:left;padding:11px 8px 7px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
 th .arr{color:var(--hi)}
-td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:hidden}
 tr.row{cursor:pointer}
 tr.row:hover td{background:var(--panel)}
 tr.row:focus-visible{outline:2px solid var(--hi);outline-offset:-2px}
 .tick{font-weight:600}
-.nm{color:var(--mut);font-size:12.5px}
-.num{font-family:"IBM Plex Mono",monospace;font-size:13.5px;text-align:right}
-.pos{color:var(--hi)}.neg{color:var(--lo)}
-.score{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14.5px}
-.spine{display:flex;gap:2px;margin-top:5px}
+.nm{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.num{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;white-space:nowrap}
+.pos{color:var(--hi)}.neg{color:var(--lo)}.zero{color:var(--mut)}
+.score{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13.5px}
+.spine{display:flex;gap:2px;margin-top:4px}
 .spine i{height:5px;flex:1;border-radius:2px;background:var(--spine)}
 .spine i.s1{background:color-mix(in srgb,var(--lo) 75%,var(--spine))}
-.spine i.s2{background:var(--mid)}
-.spine i.s3{background:var(--hi)}
-.flag{font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);border-radius:4px;padding:2px 6px;color:var(--mut)}
-.flag.v{color:var(--lo);border-color:var(--lo)}
-tr.dim td{opacity:.45}
-/* detail */
+.spine i.s2{background:var(--mid)}.spine i.s3{background:var(--hi)}
+.flag{display:inline-block;width:104px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.04em;border-radius:5px;padding:3px 0;border:1px solid}
+.fg-None{color:var(--hi);border-color:var(--hi);background:color-mix(in srgb,var(--hi) 12%,transparent)}
+.fg-PARTIAL{color:var(--mid);border-color:var(--mid);background:color-mix(in srgb,var(--mid) 12%,transparent)}
+.fg-NODATA{color:var(--mut);border-color:var(--mut);background:color-mix(in srgb,var(--mut) 12%,transparent)}
+.fg-VETO{color:var(--lo);border-color:var(--lo);background:color-mix(in srgb,var(--lo) 12%,transparent)}
+.fg-ETF{color:var(--pur);border-color:var(--pur);background:color-mix(in srgb,var(--pur) 12%,transparent)}
+.fg-ADDED{color:var(--lnk);border-color:var(--lnk);background:color-mix(in srgb,var(--lnk) 12%,transparent)}
+tr.dim td:not(.cmt):not(.flagcell){opacity:.5}
+.cmt span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;line-height:1.45}
+.cmt .tw{color:var(--hi)}.cmt .hw{color:var(--lo)}
+.rmv{color:var(--lo);cursor:pointer;font-weight:700;margin-left:6px}
 #ov{position:fixed;inset:0;background:rgba(6,10,14,.6);opacity:0;pointer-events:none;transition:.2s;z-index:9}
 #ov.on{opacity:1;pointer-events:auto}
 #panel{position:fixed;top:0;right:0;bottom:0;width:min(680px,100%);background:var(--panel);border-left:1px solid var(--line);transform:translateX(102%);transition:.25s ease;z-index:10;overflow-y:auto;padding:22px}
 #panel.on{transform:none}
-#panel h2{font-size:24px;letter-spacing:-.01em}
-.sub{color:var(--mut);font-size:13px;margin:2px 0 14px}
+#panel h2{font-size:23px;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:12.5px;margin:2px 0 14px}
 .close{position:absolute;top:16px;right:16px;background:var(--panel2);border:1px solid var(--line);color:var(--tx);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
 .tv{width:100%;height:340px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);margin:6px 0 18px}
 .tv iframe{width:100%;height:100%;border:0}
-.sec{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:20px 0 8px}
+.finrow{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+.fincard{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.fincard .l{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.fincard .v{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;margin-top:2px}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:18px 0 8px}
 .f{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel2)}
 .f>button{all:unset;display:flex;width:100%;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
 .f>button:focus-visible{outline:2px solid var(--hi)}
-.fname{flex:1;font-size:13.5px;font-weight:500}
-.fraw{color:var(--mut);font-size:12px;font-family:"IBM Plex Mono",monospace}
-.fbar{width:110px;height:7px;border-radius:4px;background:var(--spine);overflow:hidden}
+.fname{flex:1;font-size:13px;font-weight:500}
+.fraw{color:var(--mut);font-size:11.5px;font-family:"IBM Plex Mono",monospace}
+.fbar{width:104px;height:7px;border-radius:4px;background:var(--spine);overflow:hidden}
 .fbar i{display:block;height:100%}
-.fexp{display:none;padding:0 12px 12px;color:var(--mut);font-size:13px;line-height:1.6}
+.fexp{display:none;padding:0 12px 12px;color:var(--mut);font-size:12.5px;line-height:1.6}
 .f.open .fexp{display:block}
-.news a{color:var(--tx);text-decoration:none;display:block;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.news a{color:var(--tx);text-decoration:none;display:block;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
 .news a:hover{color:var(--lnk)}
-.news .d{color:var(--mut);font-size:11.5px;display:block}
+.news .d{color:var(--mut);font-size:11px;display:block}
 .note{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--mut);font-size:12.5px;line-height:1.6}
 .veto{border-color:var(--lo);color:var(--lo)}
-footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:18px 22px;line-height:1.7;max-width:1180px;margin:0 auto}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:16px 26px;line-height:1.6}
 dialog{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:14px;max-width:640px;width:92%;padding:24px}
 dialog::backdrop{background:rgba(6,10,14,.65)}
 dialog h3{margin-bottom:10px}
-dialog p{color:var(--mut);font-size:13.5px;margin:0 0 10px;line-height:1.65}
-@media(max-width:760px){.hidem{display:none}main{padding:6px 6px 60px}td,th{padding:9px 6px}}
+dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
+@media(max-width:920px){.hidem{display:none}}
 @media(prefers-reduced-motion:reduce){#panel,#ov{transition:none}}
 </style></head><body>
 <header>
   <h1>AI Infrastructure Screen <span class="amp">/</span> 10-Factor Ranking</h1>
-  <span class="meta">Data refreshed <b id="refdate">—</b> · <b id="ncount">—</b> companies · auto-updates weekly · <button class="btn" onclick="method.showModal()">how scoring works</button></span>
+  <span class="meta">Data refreshed <b id="refdate">-</b> &middot; <button class="btn" onclick="method.showModal()">how scoring works</button></span>
 </header>
 <div class="bar">
-  <input type="search" id="q" placeholder="Search ticker or company…" aria-label="Search">
-  <button class="chip" aria-pressed="true" data-f="all">All</button>
-  <button class="chip" aria-pressed="false" data-f="top">Top quartile</button>
-  <button class="chip" aria-pressed="false" data-f="full">Full data only</button>
-  <button class="chip" aria-pressed="false" data-f="excl">Excluded / ETF</button>
+  <input type="search" id="q" placeholder="Search ticker or company..." aria-label="Search">
+  <button class="chip">All</button>
+  <span class="spacer"></span>
+  <input class="addbox" id="addt" placeholder="US ticker" maxlength="8" aria-label="Add US ticker">
+  <button class="addbtn" id="addbtn">+ Add ticker</button>
 </div>
 <main>
 <table id="tbl" aria-label="Ranked stocks">
+<colgroup>
+<col style="width:48px"><col style="width:18%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%">
+<col style="width:7%" class="hidem"><col style="width:auto"><col style="width:122px">
+</colgroup>
 <thead><tr>
-<th data-k="rank">Rank <span class="arr" id="a-rank">▾</span></th>
+<th data-k="rank">#<span class="arr" id="a-rank"> &#9662;</span></th>
 <th data-k="t">Company</th>
-<th data-k="price" class="num">Price</th>
+<th data-k="fy_rev" class="num">FY Rev</th>
+<th data-k="fy_profit" class="num">FY Profit</th>
+<th data-k="pq1" class="num">Profit &Delta; Q<span class="hidem"> (latest)</span></th>
+<th data-k="pq2" class="num">Profit &Delta; Q<span class="hidem"> (prior)</span></th>
 <th data-k="ret26" class="num hidem">26-wk</th>
-<th data-k="pct">Score · factor spine</th>
-<th class="hidem">Flag</th>
+<th data-k="pct">Score &middot; factor spine</th>
+<th data-k="flag">Flag</th>
 </tr></thead>
 <tbody id="tb"></tbody>
 </table>
 </main>
 <div id="ov" onclick="closeP()"></div>
 <aside id="panel" role="dialog" aria-modal="true" aria-label="Stock detail">
-  <button class="close" onclick="closeP()" aria-label="Close">✕</button>
+  <button class="close" onclick="closeP()" aria-label="Close">&#10005;</button>
   <div id="pbody"></div>
 </aside>
 <dialog id="method">
   <h3>How this ranking works</h3>
-  <p>Every company is scored on ten measurable factors — no opinions, no manual ratings. Each factor is computed from public market and financial data, weighted, and combined into one score from 0–100%. The ten factors and their plain-English meaning are shown inside every stock's detail view.</p>
-  <p>Factors marked <b>NA</b> (data not published for that company) are excluded from both sides of the calculation, so thin-coverage companies aren't unfairly punished — but their "data weight" is shown, and scores built on little data deserve less trust.</p>
-  <p>Companies facing active fraud litigation are excluded from the ranking entirely rather than scored — a lawsuit isn't a minus-three, it's a different category of risk. ETFs are shown for reference but not ranked (too few factors apply).</p>
-  <p><b>This is a screening tool, not investment advice.</b> A high score means a company currently fits these ten criteria — it is not a prediction, a recommendation, or a substitute for your own research. Markets can and do defy every factor here.</p>
-  <form method="dialog"><button class="chip">Close</button></form>
+  <p>Every company is scored on ten measurable factors &mdash; no opinions, no manual ratings. Each factor is computed from public market and financial data, weighted, and combined into one score from 0&ndash;100%. The ten factors and their plain-English meaning are shown inside every stock's detail view.</p>
+  <p>Factors marked <b>NA</b> (data not published for that company) are excluded from both sides of the calculation, so thin-coverage companies aren't unfairly punished. Rows scored on incomplete data are flagged <b>PARTIAL DATA</b>; fully-scored rows are flagged <b>None</b>.</p>
+  <p>Companies facing active fraud litigation are excluded from scoring (<b>VETO</b>). ETFs are shown for reference (<b>ETF</b>) but not scored on company factors. You can add any US ticker with the box at the top &mdash; it appears immediately and is fully scored on the next weekly refresh once added to the screening universe.</p>
+  <p><b>This is a screening tool, not investment advice.</b> A high score means a company currently fits these ten criteria &mdash; it is not a prediction or recommendation.</p>
+  <form method="dialog"><button class="chip" style="cursor:pointer">Close</button></form>
 </dialog>
-<footer>
-  <b>Disclaimer:</b> Educational screening tool. Nothing here is investment advice, a recommendation, or an offer to buy or sell any security. Scores are mechanical calculations from public data (Yahoo Finance) that may be delayed, incomplete, or wrong. Charts by TradingView. Past patterns do not predict future results. Consult a licensed financial adviser before investing. · Factor scores refresh weekly (Mondays); charts are live.
-</footer>
-
+<footer><b>Disclaimer:</b> This is not investment advice, please do your own diligence to make investment decisions.</footer>
+<script id="snapshot" type="application/json">{"meta":{"generated_utc":"loading..."},"stocks":[]}</script>
 <script>
-const EXPL={"F1": ["Analyst forecast upgrades", "Are the professionals who model this company raising their profit forecasts? When analysts keep discovering they were too pessimistic, the stock usually keeps surprising on the upside. Measured: % change in consensus earnings estimates over the last 90 days. Weight 3.0 - the strongest single predictor in the set."], "F2": ["Earnings surprises", "When results came out, did the company deliver more profit than experts predicted - and by how much? Companies that beat big tend to keep beating. Measured: average % earnings surprise over the last two reported quarters. Weight 2.5."], "F3": ["Steady price strength", "Is the stock rising in a controlled way, or spiking wildly? Calm, persistent uptrends tend to continue; parabolic spikes tend to reverse - so a stock far above its long-term average gets a penalty even if it's up a lot. Measured: 26-week return divided by volatility, with a haircut for over-extension. Weight 3.0."], "F4": ["Sales growth, delivered", "Is AI demand actually showing up in this company's sales - not in press releases, but in reported revenue? Measured: latest quarter's revenue vs the same quarter a year ago. Weight 2.5."], "F5": ["Pricing power", "Is the company keeping more profit out of every dollar of sales than it used to? Expanding margins are the measurable footprint of real competitive advantage. Measured: gross margin, latest four quarters vs the prior period, in basis points. Weight 2.0."], "F6": ["Expected future growth", "How fast do analysts expect sales to grow ahead? Their models incorporate every disclosed order book and contract backlog. Measured: consensus revenue growth for this year and next. Weight 2.0."], "F7": ["Price vs. growth check", "Are you paying a survivable price for that growth? A fast grower can still be a bad buy at the wrong price. Measured: enterprise value-to-sales divided by expected growth - lower is better. Weight 2.5."], "F8": ["Financial safety", "Does the company have more cash than debt, and is it avoiding printing new shares that shrink your slice of the pie? Measured: net cash position and 12-month share-count change. Weight 2.0."], "F9": ["Expert agreement", "Do the analysts covering the stock roughly agree on its value, or are their targets wildly apart? Big disagreement signals hidden risk - and historically predicts weaker returns. Measured: spread between highest and lowest price targets. Weight 1.5."], "F10": ["Insider conviction", "Are the executives who know the company best buying shares with their own money? Insiders sell for many reasons but buy for only one. Measured: net insider share purchases over six months. Weight 1.5."]};
-const TVMAP={"000660.KS": "KRX:000660", "SIVE.ST": "OMXSTO:SIVE", "ENR.DE": "XETR:ENR", "NSU.V": "TSXV:NSU", "MOG-A": "NYSE:MOG.A", "DRAM": "CBOE:DRAM", "URA": "AMEX:URA", "TE": "NYSE:TE", "TSAT": "NASDAQ:TSAT"};
-let D={meta:{generated_utc:'loading…',universe:'…'},stocks:[]};
-fetch('data.json').then(r=>r.json()).then(j=>{D=j;init();}).catch(()=>{document.getElementById('tb').innerHTML='<tr><td colspan=6 style=padding:30px;color:var(--mut)>Data not generated yet — run the <b>Weekly data refresh</b> workflow once in the Actions tab, then reload.</td></tr>';});
-let sortK='rank',asc=true,filter='all',qs='';
-const fmt=(v,d=1)=>v==null?'—':(+v).toFixed(d);
-const mcapf=v=>v==null?'—':v>=1e12?(v/1e12).toFixed(2)+'T':v>=1e9?(v/1e9).toFixed(1)+'B':(v/1e6).toFixed(0)+'M';
+const EXPL={"F1": ["Analyst forecast upgrades", "Are the professionals who model this company raising their profit forecasts? When analysts keep discovering they were too pessimistic, the stock usually keeps surprising on the upside. Measured: % change in consensus earnings estimates over the last 90 days. Weight 3.0."], "F2": ["Earnings surprises", "When results came out, did the company deliver more profit than experts predicted, and by how much? Companies that beat big tend to keep beating. Measured: average % earnings surprise over the last two reported quarters. Weight 2.5."], "F3": ["Steady price strength", "Is the stock rising in a controlled way, or spiking wildly? Calm, persistent uptrends tend to continue; parabolic spikes tend to reverse, so a stock far above its long-term average gets a penalty. Measured: 26-week return divided by volatility, with a haircut for over-extension. Weight 3.0."], "F4": ["Sales growth, delivered", "Is AI demand actually showing up in this company's sales, not in press releases but in reported revenue? Measured: latest quarter's revenue vs the same quarter a year ago. Weight 2.5."], "F5": ["Pricing power", "Is the company keeping more profit out of every dollar of sales than it used to? Expanding margins are the measurable footprint of real competitive advantage. Measured: gross margin, latest four quarters vs the prior period, in basis points. Weight 2.0."], "F6": ["Expected future growth", "How fast do analysts expect sales to grow ahead? Their models incorporate every disclosed order book and contract backlog. Measured: consensus revenue growth for this year and next. Weight 2.0."], "F7": ["Price vs. growth check", "Are you paying a survivable price for that growth? A fast grower can still be a bad buy at the wrong price. Measured: enterprise value-to-sales divided by expected growth; lower is better. Weight 2.5."], "F8": ["Financial safety", "Does the company have more cash than debt, and is it avoiding printing new shares that shrink your slice of the pie? Measured: net cash position and 12-month share-count change. Weight 2.0."], "F9": ["Expert agreement", "Do the analysts covering the stock roughly agree on its value, or are their targets wildly apart? Big disagreement signals hidden risk and historically predicts weaker returns. Measured: spread between highest and lowest price targets. Weight 1.5."], "F10": ["Insider conviction", "Are the executives who know the company best buying shares with their own money? Insiders sell for many reasons but buy for only one. Measured: net insider share purchases over six months. Weight 1.5."]}, TVMAP={"000660.KS": "KRX:000660", "SIVE.ST": "OMXSTO:SIVE", "ENR.DE": "XETR:ENR", "NSU.V": "TSXV:NSU", "MOG-A": "NYSE:MOG.A", "DRAM": "CBOE:DRAM", "URA": "AMEX:URA", "TE": "NYSE:TE", "TSAT": "NASDAQ:TSAT"};
+let D={meta:{generated_utc:'loading...'},stocks:[]};
+try{D=JSON.parse(document.getElementById('snapshot').textContent);}catch(e){}
+fetch('data.json').then(r=>r.ok?r.json():null).then(j=>{if(j){D=j;init();}}).catch(()=>{});
+let sortK='rank',asc=true,qs='';
 const MX={F1:3,F2:2,F3:3,F4:3,F5:2,F6:2,F7:2,F8:2,F9:2,F10:2};
+const LS='aiscreen_added';
+function getAdded(){try{return JSON.parse(localStorage.getItem(LS)||'[]');}catch(e){return[];}}
+function setAdded(a){try{localStorage.setItem(LS,JSON.stringify(a));}catch(e){}}
+const fmt=(v,d=1)=>v==null?'-':(+v).toFixed(d);
+const pctf=v=>v==null?'<span class="zero">n/m</span>':`<span class="${v>0?'pos':v<0?'neg':'zero'}">${v>0?'+':''}${(+v).toFixed(0)}%</span>`;
+function money(v){if(v==null)return '-';const s=v<0?'-':'';v=Math.abs(v);
+  if(v>=1e12)return s+'$'+(v/1e12).toFixed(2)+'T';if(v>=1e9)return s+'$'+(v/1e9).toFixed(1)+'B';
+  if(v>=1e6)return s+'$'+(v/1e6).toFixed(0)+'M';return s+'$'+v.toFixed(0);}
+const mcapf=v=>v==null?'-':v>=1e12?(v/1e12).toFixed(2)+'T':v>=1e9?(v/1e9).toFixed(1)+'B':(v/1e6).toFixed(0)+'M';
 function segcls(s,mx){if(s==null)return'';const r=s/mx;return r>=0.75?'s3':r>=0.4?'s2':'s1';}
 function spine(s){let h='<div class="spine">';for(const k of Object.keys(MX)){h+=`<i class="${segcls(s[k],MX[k])}" title="${k}: ${s[k]==null?'NA':s[k]+'/'+MX[k]}"></i>`;}return h+'</div>';}
+function flagCls(f){return 'fg-'+(f==='PARTIAL DATA'?'PARTIAL':f==='NO DATA'?'NODATA':f);}
+function addedRows(){
+  return getAdded().map(t=>({t:t,name:'(you added)',flag:'ADDED',added:true,rank:'\u2605',
+    fy_rev:null,fy_profit:null,pq1:null,pq2:null,ret26:null,pct:null,
+    tw:'Added by you',hw:'Full scoring next refresh',news:[]}));
+}
 function rows(){
-  let r=D.stocks.filter(s=>{
-    if(qs&&!(s.t.toLowerCase().includes(qs)||s.name.toLowerCase().includes(qs)))return false;
-    if(filter==='top')return s.rank&&s.rank<=Math.ceil(D.stocks.filter(x=>x.rank).length/4);
-    if(filter==='full')return s.flag===''&&s.dataWt>=22.4;
-    if(filter==='excl')return s.flag!=='';
-    return true;});
-  r.sort((a,b)=>{let x=a[sortK],y=b[sortK];
-    if(sortK==='rank'){x=a.rank||9e3;y=b.rank||9e3;}
+  let base=addedRows().concat(D.stocks);
+  let r=base.filter(s=>!qs||s.t.toLowerCase().includes(qs)||(s.name||'').toLowerCase().includes(qs));
+  r.sort((a,b)=>{
+    if(a.added&&!b.added)return -1; if(b.added&&!a.added)return 1;
+    let x=a[sortK],y=b[sortK];
+    if(sortK==='rank'){x=+a.rank||9e3;y=+b.rank||9e3;}
     if(x==null)x=-9e9;if(y==null)y=-9e9;
     if(typeof x==='string')return asc?x.localeCompare(y):y.localeCompare(x);
     return asc?x-y:y-x;});
   return r;}
 function render(){
   document.getElementById('refdate').textContent=D.meta.generated_utc;
-  document.getElementById('ncount').textContent=D.meta.universe;
   const tb=document.getElementById('tb');tb.innerHTML='';
   for(const s of rows()){
     const tr=document.createElement('tr');
-    tr.className='row'+(s.flag?' dim':'');tr.tabIndex=0;
-    const chg=s.ret26==null?'':(s.ret26>=0?'pos':'neg');
-    tr.innerHTML=`<td class="mono">${s.rank||'—'}</td>
-    <td><span class="tick">${s.t}</span><br><span class="nm">${s.name}</span></td>
-    <td class="num">${fmt(s.price,2)}</td>
-    <td class="num hidem ${chg}">${s.ret26==null?'—':(s.ret26>0?'+':'')+fmt(s.ret26)+'%'}</td>
-    <td style="min-width:190px"><span class="score">${fmt(s.pct)}%</span>${spine(s)}</td>
-    <td class="hidem">${s.flag?`<span class="flag ${s.flag==='VETO'?'v':''}">${s.flag}</span>`:''}</td>`;
+    tr.className='row'+(s.flag!=='None'?' dim':'');tr.tabIndex=0;
+    const chg=s.ret26==null?'zero':(s.ret26>=0?'pos':'neg');
+    const flabel=s.flag==='None'?'None':s.flag;
+    const rmv=s.added?`<span class="rmv" title="remove" onclick="event.stopPropagation();removeAdded('${s.t}')">&times;</span>`:'';
+    tr.innerHTML=`<td class="mono">${s.rank||'-'}</td>
+    <td><span class="tick">${s.t}</span>${rmv}<span class="nm">${s.name}</span></td>
+    <td class="num">${money(s.fy_rev)}</td>
+    <td class="num ${s.fy_profit!=null&&s.fy_profit<0?'neg':''}">${money(s.fy_profit)}</td>
+    <td class="num">${s.pq1==null?'<span class="zero">n/m</span>':pctf(s.pq1)}</td>
+    <td class="num">${s.pq2==null?'<span class="zero">n/m</span>':pctf(s.pq2)}</td>
+    <td class="num hidem ${chg}">${s.ret26==null?'-':(s.ret26>0?'+':'')+fmt(s.ret26)+'%'}</td>
+    <td>${s.pct==null?'<span class="score">-</span>':`<span class="score">${fmt(s.pct)}%</span>`+spine(s)}</td>
+    <td class="flagcell"><span class="flag ${flagCls(s.flag)}">${flabel}</span></td>`;
     tr.onclick=()=>openP(s);tr.onkeydown=e=>{if(e.key==='Enter')openP(s)};
     tb.appendChild(tr);}
 }
 function tvsym(t){return TVMAP[t]||t.replace('-','.');}
 function openP(s){
   const r=s.raw||{};
-  const rawmap={F1:r.rev90!=null?r.rev90+'% est Δ90d':null,F2:r.surp!=null?r.surp+'% avg surprise':null,
+  const rawmap={F1:r.rev90!=null?r.rev90+'% est \u039490d':null,F2:r.surp!=null?r.surp+'% avg surprise':null,
    F3:r.ra!=null?'ratio '+r.ra:null,F4:r.revg!=null?r.revg+'% YoY':null,F5:r.gmd!=null?r.gmd+' bps':null,
-   F6:r.fwdrevg!=null?r.fwdrevg+'% fwd':null,F7:r.evsg!=null?'EV/S÷g '+r.evsg:null,F8:r.bs&&r.bs!=='—'?r.bs:null,
+   F6:r.fwdrevg!=null?r.fwdrevg+'% fwd':null,F7:r.evsg!=null?'EV/S\u00f7g '+r.evsg:null,F8:r.bs&&r.bs!=='-'?r.bs:null,
    F9:r.disp!=null?r.disp+'% spread':null,F10:r.ins!=null?r.ins+'% net':null};
   let fh='';
-  for(const k of Object.keys(MX)){
+  if(!s.added){for(const k of Object.keys(MX)){
     const sc=s[k],mx=MX[k],e=EXPL[k];
     const w=sc==null?0:Math.round(sc/mx*100);
     const col=sc==null?'var(--spine)':(sc/mx>=0.75?'var(--hi)':sc/mx>=0.4?'var(--mid)':'var(--lo)');
     fh+=`<div class="f"><button onclick="this.parentNode.classList.toggle('open')" aria-expanded="false">
       <span class="mono" style="color:var(--mut);font-size:11px;width:26px">${k}</span>
-      <span class="fname">${e[0]}</span>
-      <span class="fraw">${sc==null?'NA':(rawmap[k]||'')}</span>
+      <span class="fname">${e[0]}</span><span class="fraw">${sc==null?'NA':(rawmap[k]||'')}</span>
       <span class="fbar"><i style="width:${w}%;background:${col}"></i></span>
-      <span class="mono" style="width:34px;text-align:right;font-size:12.5px">${sc==null?'—':sc+'/'+mx}</span>
-    </button><div class="fexp">${e[1]}</div></div>`;}
-  let nh='';
-  for(const n of (s.news||[]).slice(0,4)){
-    nh+=`<a href="${n.u}" target="_blank" rel="noopener">${n.t}<span class="d">${n.d}</span></a>`;}
-  if(!nh)nh='<p class="note">No recent headlines found for this ticker.</p>';
-  const veto=s.flag==='VETO'?`<p class="note veto"><b>Excluded from ranking:</b> ${s.vetoReason||''}</p>`:'';
-  const etf=s.flag==='ETF'?`<p class="note">ETF — shown for reference. Company-level factors don't apply, so it isn't ranked against individual stocks.</p>`:'';
+      <span class="mono" style="width:34px;text-align:right;font-size:12px">${sc==null?'-':sc+'/'+mx}</span>
+    </button><div class="fexp">${e[1]}</div></div>`;}}
+  let nh='';for(const n of (s.news||[]).slice(0,4)){nh+=`<a href="${n.u}" target="_blank" rel="noopener">${n.t}<span class="d">${n.d}</span></a>`;}
+  if(!nh)nh='<p class="note">No recent headlines loaded for this ticker.</p>';
+  const veto=s.flag==='VETO'?`<p class="note veto"><b>Excluded from scoring (VETO):</b> ${s.vetoReason||''}</p>`:'';
+  const etf=s.flag==='ETF'?`<p class="note">ETF &mdash; shown for reference. Company-level factors don't apply.</p>`:'';
+  const addednote=s.added?`<p class="note"><b>You added this ticker.</b> Its live chart is shown below. To have <b>${s.t}</b> fully scored on the ten factors and ranked like the rest, add it (one line) to <span class="mono">extra_tickers.txt</span> in the repository &mdash; <a class="btn" href="https://github.com/jj-jimmy88/ai-infra-screen/edit/main/extra_tickers.txt" target="_blank" rel="noopener">edit that file &#8599;</a> &mdash; then the next weekly refresh (or a manual run) scores it with the exact same engine.</p>`:'';
+  const fin=(!s.added&&(s.fy_rev!=null||s.fy_profit!=null))?`<div class="finrow">
+     <div class="fincard"><div class="l">FY${s.fy_year?(' '+s.fy_year):''} Revenue</div><div class="v">${money(s.fy_rev)}</div></div>
+     <div class="fincard"><div class="l">FY${s.fy_year?(' '+s.fy_year):''} Net Profit</div><div class="v ${s.fy_profit!=null&&s.fy_profit<0?'neg':''}">${money(s.fy_profit)}</div></div>
+     <div class="fincard"><div class="l">Profit \u0394 ${s.pq1lbl||'latest Q'}</div><div class="v">${s.pq1==null?'n/m':(s.pq1>0?'+':'')+s.pq1+'%'}</div></div>
+     <div class="fincard"><div class="l">Profit \u0394 ${s.pq2lbl||'prior Q'}</div><div class="v">${s.pq2==null?'n/m':(s.pq2>0?'+':'')+s.pq2+'%'}</div></div>
+   </div>`:'';
   document.getElementById('pbody').innerHTML=`
-   <h2>${s.t} <span style="color:var(--mut);font-weight:400;font-size:16px">${s.name}</span></h2>
-   <div class="sub mono">${s.rank?('Rank #'+s.rank+' · '):''}Score ${fmt(s.pct)}% · data weight ${s.dataWt}/22.5 · mkt cap ${mcapf(s.mcap)}</div>
-   ${veto}${etf}
-   <div class="tv"><iframe title="Live chart" loading="lazy" src="https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvsym(s.t))}&interval=D&theme=dark&style=1&hidetoptoolbar=0&saveimage=0&withdateranges=1"></iframe></div>
-   <div class="sec">The ten factors — tap any row for a plain-English explanation</div>
-   ${fh}
-   <div class="sec">Latest headlines <span style="text-transform:none;letter-spacing:0">· refreshed weekly · <a class="btn" style="font-size:12px" href="https://finance.yahoo.com/quote/${s.t}/news" target="_blank" rel="noopener">live feed ↗</a></span></div>
+   <h2>${s.t} <span style="color:var(--mut);font-weight:400;font-size:15px">${s.name}</span></h2>
+   <div class="sub mono">${s.added?'User-added':((s.rank?('#'+s.rank+' \u00b7 '):'')+'Score '+fmt(s.pct)+'% \u00b7 data weight '+s.dataWt+'/'+(D.meta.fullwt||22.5)+' \u00b7 mkt cap '+mcapf(s.mcap))}</div>
+   ${veto}${etf}${addednote}${fin}
+   <div class="tv"><iframe title="Live chart" loading="lazy" src="https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvsym(s.t))}&interval=D&theme=dark&style=2&hidetoptoolbar=0&saveimage=0&withdateranges=1"></iframe></div>
+   ${s.added?'':'<div class="sec">The ten factors &mdash; tap any row for a plain-English explanation</div>'+fh}
+   <div class="sec">Latest headlines <span style="text-transform:none;letter-spacing:0">&middot; <a class="btn" style="font-size:12px" href="https://finance.yahoo.com/quote/${s.t}/news" target="_blank" rel="noopener">live feed &#8599;</a></span></div>
    <div class="news">${nh}</div>
-   <p class="note" style="margin-top:16px">Headlines are context for judging risk — news is <b>not</b> used in the score and is not a trading signal.</p>`;
-  document.getElementById('panel').classList.add('on');
-  document.getElementById('ov').classList.add('on');
+   <p class="note" style="margin-top:16px">Headlines are context for judging risk &mdash; news is <b>not</b> used in the score.</p>`;
+  document.getElementById('panel').classList.add('on');document.getElementById('ov').classList.add('on');
 }
-function closeP(){document.getElementById('panel').classList.remove('on');document.getElementById('ov').classList.remove('on')}
+function closeP(){document.getElementById('panel').classList.remove('on');document.getElementById('ov').classList.remove('on');}
+function addTicker(){
+  const inp=document.getElementById('addt');let t=(inp.value||'').trim().toUpperCase().replace(/[^A-Z0-9.\-]/g,'');
+  if(!t)return;const a=getAdded();
+  if(!a.includes(t)&&!D.stocks.some(s=>s.t===t)){a.unshift(t);setAdded(a);}
+  inp.value='';render();
+  const s=addedRows().find(x=>x.t===t);if(s)openP(s);
+}
+function removeAdded(t){setAdded(getAdded().filter(x=>x!==t));render();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeP()});
-document.getElementById('q').addEventListener('input',e=>{qs=e.target.value.toLowerCase();render()});
-document.querySelectorAll('.chip[data-f]').forEach(c=>c.onclick=()=>{
-  document.querySelectorAll('.chip[data-f]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  c.setAttribute('aria-pressed','true');filter=c.dataset.f;render();});
+document.getElementById('q').addEventListener('input',e=>{qs=e.target.value.toLowerCase();render();});
+document.getElementById('addbtn').addEventListener('click',addTicker);
+document.getElementById('addt').addEventListener('keydown',e=>{if(e.key==='Enter')addTicker();});
 document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
-  const k=th.dataset.k;if(sortK===k)asc=!asc;else{sortK=k;asc=(k==='rank'||k==='t');}
+  const k=th.dataset.k;if(sortK===k)asc=!asc;else{sortK=k;asc=(k==='rank'||k==='t'||k==='flag');}
   document.querySelectorAll('th .arr').forEach(a=>a.remove());
-  const sp=document.createElement('span');sp.className='arr';sp.textContent=asc?' ▾':' ▴';th.appendChild(sp);
+  const sp=document.createElement('span');sp.className='arr';sp.innerHTML=asc?' &#9662;':' &#9652;';th.appendChild(sp);
   render();});
 function init(){render();}
 init();
