@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Infrastructure Screen</title>
+<title>AI Infrastructure Stock Assessment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -29,6 +29,9 @@ main{width:100%;padding:8px 18px 60px}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);text-align:left;padding:11px 8px 7px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
 th .arr{color:var(--hi)}
+.flaghdr{padding:6px 8px}
+#flagsel{background:var(--panel);color:var(--mut);border:1px solid var(--line);border-radius:6px;font:inherit;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:5px 6px;cursor:pointer;width:100%}
+#flagsel:focus{outline:2px solid var(--hi);outline-offset:1px}
 td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:hidden}
 tr.row{cursor:pointer}
 tr.row:hover td{background:var(--panel)}
@@ -90,8 +93,8 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 @media(prefers-reduced-motion:reduce){#panel,#ov{transition:none}}
 </style></head><body>
 <header>
-  <h1>AI Infrastructure Screen <span class="amp">/</span> 10-Factor Ranking</h1>
-  <span class="meta">Data refreshed <b id="refdate">-</b> &middot; <button class="btn" onclick="method.showModal()">how scoring works</button></span>
+  <h1>AI Infrastructure Stock Assessment</h1>
+  <span class="meta">Data refreshed <b id="refdate">-</b> &middot; <button class="btn" onclick="method.showModal()">How scoring works</button></span>
 </header>
 <div class="bar">
   <input type="search" id="q" placeholder="Search ticker or company..." aria-label="Search">
@@ -103,8 +106,8 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <main>
 <table id="tbl" aria-label="Ranked stocks">
 <colgroup>
-<col style="width:48px"><col style="width:18%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%">
-<col style="width:7%" class="hidem"><col style="width:auto"><col style="width:122px">
+<col style="width:44px"><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%">
+<col style="width:8%" class="hidem"><col style="width:auto"><col style="width:120px">
 </colgroup>
 <thead><tr>
 <th data-k="rank">#<span class="arr" id="a-rank"> &#9662;</span></th>
@@ -115,7 +118,7 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <th data-k="pq2" class="num">Profit &Delta; Q<span class="hidem"> (prior)</span></th>
 <th data-k="ret26" class="num hidem">26-wk</th>
 <th data-k="pct">Score &middot; factor spine</th>
-<th data-k="flag">Flag</th>
+<th class="flaghdr"><select id="flagsel" aria-label="Filter by flag"><option value="">Flag: all</option><option value="None">NONE</option><option value="PARTIAL DATA">PARTIAL DATA</option><option value="ETF">ETF</option><option value="VETO">FRAUD</option><option value="NO DATA">NO DATA</option></select></th>
 </tr></thead>
 <tbody id="tb"></tbody>
 </table>
@@ -128,19 +131,19 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <dialog id="method">
   <h3>How this ranking works</h3>
   <p>Every company is scored on ten measurable factors &mdash; no opinions, no manual ratings. Each factor is computed from public market and financial data, weighted, and combined into one score from 0&ndash;100%. The ten factors and their plain-English meaning are shown inside every stock's detail view.</p>
-  <p>Factors marked <b>NA</b> (data not published for that company) are excluded from both sides of the calculation, so thin-coverage companies aren't unfairly punished. Rows scored on incomplete data are flagged <b>PARTIAL DATA</b>; fully-scored rows are flagged <b>None</b>.</p>
-  <p>Companies facing active fraud litigation are excluded from scoring (<b>VETO</b>). ETFs are shown for reference (<b>ETF</b>) but not scored on company factors. You can add any US ticker with the box at the top &mdash; it appears immediately and is fully scored on the next weekly refresh once added to the screening universe.</p>
+  <p>Factors marked <b>NA</b> (data not published for that company) are excluded from both sides of the calculation, so thin-coverage companies aren't unfairly punished. Rows scored on incomplete data are flagged <b>PARTIAL DATA</b>; fully-scored rows are flagged <b>NONE</b>.</p>
+  <p>Companies facing active fraud litigation are excluded from scoring (<b>FRAUD</b>). ETFs are shown for reference (<b>ETF</b>) but not scored on company factors. You can add any US ticker with the box at the top &mdash; it appears immediately and is fully scored on the next weekly refresh once added to the screening universe.</p>
   <p><b>This is a screening tool, not investment advice.</b> A high score means a company currently fits these ten criteria &mdash; it is not a prediction or recommendation.</p>
   <form method="dialog"><button class="chip" style="cursor:pointer">Close</button></form>
 </dialog>
-<footer><b>Disclaimer:</b> This is not investment advice, please do your own diligence to make investment decisions.</footer>
+<footer><b>Disclaimer:</b> This is not investment advice, please do your own due diligence to make investment decisions.</footer>
 <script id="snapshot" type="application/json">{"meta":{"generated_utc":"loading..."},"stocks":[]}</script>
 <script>
 const EXPL={"F1": ["Analyst forecast upgrades", "Are the professionals who model this company raising their profit forecasts? When analysts keep discovering they were too pessimistic, the stock usually keeps surprising on the upside. Measured: % change in consensus earnings estimates over the last 90 days. Weight 3.0."], "F2": ["Earnings surprises", "When results came out, did the company deliver more profit than experts predicted, and by how much? Companies that beat big tend to keep beating. Measured: average % earnings surprise over the last two reported quarters. Weight 2.5."], "F3": ["Steady price strength", "Is the stock rising in a controlled way, or spiking wildly? Calm, persistent uptrends tend to continue; parabolic spikes tend to reverse, so a stock far above its long-term average gets a penalty. Measured: 26-week return divided by volatility, with a haircut for over-extension. Weight 3.0."], "F4": ["Sales growth, delivered", "Is AI demand actually showing up in this company's sales, not in press releases but in reported revenue? Measured: latest quarter's revenue vs the same quarter a year ago. Weight 2.5."], "F5": ["Pricing power", "Is the company keeping more profit out of every dollar of sales than it used to? Expanding margins are the measurable footprint of real competitive advantage. Measured: gross margin, latest four quarters vs the prior period, in basis points. Weight 2.0."], "F6": ["Expected future growth", "How fast do analysts expect sales to grow ahead? Their models incorporate every disclosed order book and contract backlog. Measured: consensus revenue growth for this year and next. Weight 2.0."], "F7": ["Price vs. growth check", "Are you paying a survivable price for that growth? A fast grower can still be a bad buy at the wrong price. Measured: enterprise value-to-sales divided by expected growth; lower is better. Weight 2.5."], "F8": ["Financial safety", "Does the company have more cash than debt, and is it avoiding printing new shares that shrink your slice of the pie? Measured: net cash position and 12-month share-count change. Weight 2.0."], "F9": ["Expert agreement", "Do the analysts covering the stock roughly agree on its value, or are their targets wildly apart? Big disagreement signals hidden risk and historically predicts weaker returns. Measured: spread between highest and lowest price targets. Weight 1.5."], "F10": ["Insider conviction", "Are the executives who know the company best buying shares with their own money? Insiders sell for many reasons but buy for only one. Measured: net insider share purchases over six months. Weight 1.5."]}, TVMAP={"000660.KS": "KRX:000660", "SIVE.ST": "OMXSTO:SIVE", "ENR.DE": "XETR:ENR", "NSU.V": "TSXV:NSU", "MOG-A": "NYSE:MOG.A", "DRAM": "CBOE:DRAM", "URA": "AMEX:URA", "TE": "NYSE:TE", "TSAT": "NASDAQ:TSAT"};
 let D={meta:{generated_utc:'loading...'},stocks:[]};
 try{D=JSON.parse(document.getElementById('snapshot').textContent);}catch(e){}
 fetch('data.json').then(r=>r.ok?r.json():null).then(j=>{if(j){D=j;init();}}).catch(()=>{});
-let sortK='rank',asc=true,qs='';
+let sortK='rank',asc=true,qs='',flagFilter='';
 const MX={F1:3,F2:2,F3:3,F4:3,F5:2,F6:2,F7:2,F8:2,F9:2,F10:2};
 const LS='aiscreen_added';
 function getAdded(){try{return JSON.parse(localStorage.getItem(LS)||'[]');}catch(e){return[];}}
@@ -162,6 +165,7 @@ function addedRows(){
 function rows(){
   let base=addedRows().concat(D.stocks);
   let r=base.filter(s=>!qs||s.t.toLowerCase().includes(qs)||(s.name||'').toLowerCase().includes(qs));
+  if(flagFilter)r=r.filter(s=>s.flag===flagFilter);
   r.sort((a,b)=>{
     if(a.added&&!b.added)return -1; if(b.added&&!a.added)return 1;
     let x=a[sortK],y=b[sortK];
@@ -175,9 +179,9 @@ function render(){
   const tb=document.getElementById('tb');tb.innerHTML='';
   for(const s of rows()){
     const tr=document.createElement('tr');
-    tr.className='row'+(s.flag!=='None'?' dim':'');tr.tabIndex=0;
+    tr.className='row';tr.tabIndex=0;
     const chg=s.ret26==null?'zero':(s.ret26>=0?'pos':'neg');
-    const flabel=s.flag==='None'?'None':s.flag;
+    const flabel=s.flag==='None'?'NONE':s.flag==='VETO'?'FRAUD':s.flag;
     const rmv=s.added?`<span class="rmv" title="remove" onclick="event.stopPropagation();removeAdded('${s.t}')">&times;</span>`:'';
     tr.innerHTML=`<td class="mono">${s.rank||'-'}</td>
     <td><span class="tick">${s.t}</span>${rmv}<span class="nm">${s.name}</span></td>
@@ -211,7 +215,7 @@ function openP(s){
     </button><div class="fexp">${e[1]}</div></div>`;}}
   let nh='';for(const n of (s.news||[]).slice(0,4)){nh+=`<a href="${n.u}" target="_blank" rel="noopener">${n.t}<span class="d">${n.d}</span></a>`;}
   if(!nh)nh='<p class="note">No recent headlines loaded for this ticker.</p>';
-  const veto=s.flag==='VETO'?`<p class="note veto"><b>Excluded from scoring (VETO):</b> ${s.vetoReason||''}</p>`:'';
+  const veto=s.flag==='VETO'?`<p class="note veto"><b>Excluded from scoring (FRAUD):</b> ${s.vetoReason||''}</p>`:'';
   const etf=s.flag==='ETF'?`<p class="note">ETF &mdash; shown for reference. Company-level factors don't apply.</p>`:'';
   const addednote=s.added?`<p class="note"><b>You added this ticker.</b> Its live chart is shown below. To have <b>${s.t}</b> fully scored on the ten factors and ranked like the rest, add it (one line) to <span class="mono">extra_tickers.txt</span> in the repository &mdash; <a class="btn" href="https://github.com/jj-jimmy88/ai-infra-screen/edit/main/extra_tickers.txt" target="_blank" rel="noopener">edit that file &#8599;</a> &mdash; then the next weekly refresh (or a manual run) scores it with the exact same engine.</p>`:'';
   const fin=(!s.added&&(s.fy_rev!=null||s.fy_profit!=null))?`<div class="finrow">
@@ -242,6 +246,7 @@ function addTicker(){
 function removeAdded(t){setAdded(getAdded().filter(x=>x!==t));render();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeP()});
 document.getElementById('q').addEventListener('input',e=>{qs=e.target.value.toLowerCase();render();});
+document.getElementById('flagsel').addEventListener('change',e=>{flagFilter=e.target.value;render();});
 document.getElementById('addbtn').addEventListener('click',addTicker);
 document.getElementById('addt').addEventListener('keydown',e=>{if(e.key==='Enter')addTicker();});
 document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
