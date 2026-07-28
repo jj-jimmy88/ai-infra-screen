@@ -39,6 +39,8 @@ tr.row:focus-visible{outline:2px solid var(--hi);outline-offset:-2px}
 .tick{font-weight:600}
 .nm{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .num{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;white-space:nowrap}
+.sector{color:var(--mut);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.spinehdr,.spinecell{padding-left:26px}
 .pos{color:var(--hi)}.neg{color:var(--lo)}.zero{color:var(--mut)}
 .score{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13.5px}
 .spine{display:flex;gap:2px;margin-top:4px}
@@ -106,18 +108,19 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <main>
 <table id="tbl" aria-label="Ranked stocks">
 <colgroup>
-<col style="width:44px"><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%">
-<col style="width:8%" class="hidem"><col style="width:auto"><col style="width:120px">
+<col style="width:42px"><col style="width:12%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%">
+<col style="width:7%" class="hidem"><col style="width:auto"><col style="width:116px">
 </colgroup>
 <thead><tr>
 <th data-k="rank">#<span class="arr" id="a-rank"> &#9662;</span></th>
 <th data-k="t">Company</th>
+<th data-k="sector">Sector</th>
 <th data-k="fy_rev" class="num">FY Rev</th>
 <th data-k="fy_profit" class="num">FY Profit</th>
 <th data-k="pq1" class="num">Profit &Delta; Q<span class="hidem"> (latest)</span></th>
 <th data-k="pq2" class="num">Profit &Delta; Q<span class="hidem"> (prior)</span></th>
 <th data-k="ret26" class="num hidem">26-wk</th>
-<th data-k="pct">Score &middot; factor spine</th>
+<th data-k="pct" class="spinehdr">Score &middot; factor spine</th>
 <th class="flaghdr"><select id="flagsel" aria-label="Filter by flag"><option value="">Flag: all</option><option value="None">NONE</option><option value="PARTIAL DATA">PARTIAL DATA</option><option value="ETF">ETF</option><option value="VETO">FRAUD</option><option value="NO DATA">NO DATA</option></select></th>
 </tr></thead>
 <tbody id="tb"></tbody>
@@ -139,7 +142,7 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <footer><b>Disclaimer:</b> This is not investment advice, please do your own due diligence to make investment decisions.</footer>
 <script id="snapshot" type="application/json">{"meta":{"generated_utc":"loading..."},"stocks":[]}</script>
 <script>
-const EXPL={"F1": ["Analyst forecast upgrades", "Are the professionals who model this company raising their profit forecasts? When analysts keep discovering they were too pessimistic, the stock usually keeps surprising on the upside. Measured: % change in consensus earnings estimates over the last 90 days. Weight 3.0."], "F2": ["Earnings surprises", "When results came out, did the company deliver more profit than experts predicted, and by how much? Companies that beat big tend to keep beating. Measured: average % earnings surprise over the last two reported quarters. Weight 2.5."], "F3": ["Steady price strength", "Is the stock rising in a controlled way, or spiking wildly? Calm, persistent uptrends tend to continue; parabolic spikes tend to reverse, so a stock far above its long-term average gets a penalty. Measured: 26-week return divided by volatility, with a haircut for over-extension. Weight 3.0."], "F4": ["Sales growth, delivered", "Is AI demand actually showing up in this company's sales, not in press releases but in reported revenue? Measured: latest quarter's revenue vs the same quarter a year ago. Weight 2.5."], "F5": ["Pricing power", "Is the company keeping more profit out of every dollar of sales than it used to? Expanding margins are the measurable footprint of real competitive advantage. Measured: gross margin, latest four quarters vs the prior period, in basis points. Weight 2.0."], "F6": ["Expected future growth", "How fast do analysts expect sales to grow ahead? Their models incorporate every disclosed order book and contract backlog. Measured: consensus revenue growth for this year and next. Weight 2.0."], "F7": ["Price vs. growth check", "Are you paying a survivable price for that growth? A fast grower can still be a bad buy at the wrong price. Measured: enterprise value-to-sales divided by expected growth; lower is better. Weight 2.5."], "F8": ["Financial safety", "Does the company have more cash than debt, and is it avoiding printing new shares that shrink your slice of the pie? Measured: net cash position and 12-month share-count change. Weight 2.0."], "F9": ["Expert agreement", "Do the analysts covering the stock roughly agree on its value, or are their targets wildly apart? Big disagreement signals hidden risk and historically predicts weaker returns. Measured: spread between highest and lowest price targets. Weight 1.5."], "F10": ["Insider conviction", "Are the executives who know the company best buying shares with their own money? Insiders sell for many reasons but buy for only one. Measured: net insider share purchases over six months. Weight 1.5."]}, TVMAP={"000660.KS": "KRX:000660", "SIVE.ST": "OMXSTO:SIVE", "ENR.DE": "XETR:ENR", "NSU.V": "TSXV:NSU", "MOG-A": "NYSE:MOG.A", "DRAM": "CBOE:DRAM", "URA": "AMEX:URA", "TE": "NYSE:TE", "TSAT": "NASDAQ:TSAT"};
+const EXPL={"F1": ["Analyst forecast upgrades", "Are the professionals who model this company raising their profit forecasts? When analysts keep discovering they were too pessimistic, the stock usually keeps surprising on the upside. Measured: % change in consensus earnings estimates over the last 90 days. Weight 3.0."], "F2": ["Earnings surprises", "When results came out, did the company deliver more profit than experts predicted, and by how much? Companies that beat big tend to keep beating. Measured: average % earnings surprise over the last two reported quarters. Weight 2.5."], "F3": ["Steady price strength", "Is the stock rising in a controlled way, or spiking wildly? Calm, persistent uptrends tend to continue; parabolic spikes tend to reverse, so a stock far above its long-term average gets a penalty. Measured: 26-week return divided by volatility, with a haircut for over-extension. Weight 3.0."], "F4": ["Sales growth, delivered", "Is AI demand actually showing up in this company's sales, not in press releases but in reported revenue? Measured: latest quarter's revenue vs the same quarter a year ago. Weight 2.5."], "F5": ["Pricing power", "Is the company keeping more profit out of every dollar of sales than it used to? Expanding margins are the measurable footprint of real competitive advantage. Measured: gross margin, latest four quarters vs the prior period, in basis points. Weight 2.0."], "F6": ["Expected future growth", "How fast do analysts expect sales to grow ahead? Their models incorporate every disclosed order book and contract backlog. Measured: consensus revenue growth for this year and next. Weight 2.0."], "F7": ["Price vs. growth check", "Are you paying a survivable price for that growth? A fast grower can still be a bad buy at the wrong price. Measured: enterprise value-to-sales divided by expected growth; lower is better. Weight 2.5."], "F8": ["Financial safety", "Does the company have more cash than debt, and is it avoiding printing new shares that shrink your slice of the pie? Measured: net cash position and 12-month share-count change. Weight 2.0."], "F9": ["Expert agreement", "Do the analysts covering the stock roughly agree on its value, or are their targets wildly apart? Big disagreement signals hidden risk and historically predicts weaker returns. Measured: spread between highest and lowest price targets. Weight 1.5."], "F10": ["Insider conviction", "Are the executives who know the company best buying shares with their own money? Insiders sell for many reasons but buy for only one. Measured: net insider share purchases over six months. Weight 1.5."]}, TVMAP={"000660.KS": "KRX:000660", "SIVE.ST": "OMXSTO:SIVE", "ENR.DE": "XETR:ENR", "NSU.V": "TSXV:NSU", "MOG-A": "NYSE:MOG.A", "DRAM": "CBOE:DRAM", "URA": "AMEX:URA", "TE": "NYSE:TE", "TSAT": "NASDAQ:TSAT", "6324.T": "TSE:6324", "6268.T": "TSE:6268", "SHA.DE": "XETR:SHA", "2050.HK": "HKEX:2050", "MELE.BR": "EURONEXT:MELE", "NJDCY": "TSE:6594"};
 let D={meta:{generated_utc:'loading...'},stocks:[]};
 try{D=JSON.parse(document.getElementById('snapshot').textContent);}catch(e){}
 fetch('data.json').then(r=>r.ok?r.json():null).then(j=>{if(j){D=j;init();}}).catch(()=>{});
@@ -185,12 +188,13 @@ function render(){
     const rmv=s.added?`<span class="rmv" title="remove" onclick="event.stopPropagation();removeAdded('${s.t}')">&times;</span>`:'';
     tr.innerHTML=`<td class="mono">${s.rank||'-'}</td>
     <td><span class="tick">${s.t}</span>${rmv}<span class="nm">${s.name}</span></td>
+    <td><span class="sector">${s.sector||'\u2014'}</span></td>
     <td class="num">${money(s.fy_rev)}</td>
     <td class="num ${s.fy_profit!=null&&s.fy_profit<0?'neg':''}">${money(s.fy_profit)}</td>
     <td class="num">${s.pq1==null?'<span class="zero">n/m</span>':pctf(s.pq1)}</td>
     <td class="num">${s.pq2==null?'<span class="zero">n/m</span>':pctf(s.pq2)}</td>
     <td class="num hidem ${chg}">${s.ret26==null?'-':(s.ret26>0?'+':'')+fmt(s.ret26)+'%'}</td>
-    <td>${s.pct==null?'<span class="score">-</span>':`<span class="score">${fmt(s.pct)}%</span>`+spine(s)}</td>
+    <td class="spinecell">${s.pct==null?'<span class="score">-</span>':`<span class="score">${fmt(s.pct)}%</span>`+spine(s)}</td>
     <td class="flagcell"><span class="flag ${flagCls(s.flag)}">${flabel}</span></td>`;
     tr.onclick=()=>openP(s);tr.onkeydown=e=>{if(e.key==='Enter')openP(s)};
     tb.appendChild(tr);}
@@ -250,7 +254,7 @@ document.getElementById('flagsel').addEventListener('change',e=>{flagFilter=e.ta
 document.getElementById('addbtn').addEventListener('click',addTicker);
 document.getElementById('addt').addEventListener('keydown',e=>{if(e.key==='Enter')addTicker();});
 document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
-  const k=th.dataset.k;if(sortK===k)asc=!asc;else{sortK=k;asc=(k==='rank'||k==='t'||k==='flag');}
+  const k=th.dataset.k;if(sortK===k)asc=!asc;else{sortK=k;asc=(k==='rank'||k==='t'||k==='flag'||k==='sector');}
   document.querySelectorAll('th .arr').forEach(a=>a.remove());
   const sp=document.createElement('span');sp.className='arr';sp.innerHTML=asc?' &#9662;':' &#9652;';th.appendChild(sp);
   render();});
