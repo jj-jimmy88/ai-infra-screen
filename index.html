@@ -117,7 +117,7 @@ dialog p{color:var(--mut);font-size:13px;margin:0 0 10px;line-height:1.65}
 <th data-k="sector">Sector</th>
 <th data-k="fy_rev" class="num">FY Rev</th>
 <th data-k="fy_profit" class="num">FY Profit</th>
-<th data-k="pq1" class="num">Profit &Delta; Q<span class="hidem"> (latest)</span></th>
+<th data-k="pq1" class="num" style="padding-right:22px">Profit &Delta; Q<span class="hidem"> (latest)</span></th>
 <th data-k="pq2" class="num">Profit &Delta; Q<span class="hidem"> (prior)</span></th>
 <th data-k="ret26" class="num hidem">26-wk</th>
 <th data-k="pct" class="spinehdr">Score &middot; factor spine</th>
@@ -191,7 +191,7 @@ function render(){
     <td><span class="sector">${s.sector||'\u2014'}</span></td>
     <td class="num">${money(s.fy_rev)}</td>
     <td class="num ${s.fy_profit!=null&&s.fy_profit<0?'neg':''}">${money(s.fy_profit)}</td>
-    <td class="num">${s.pq1==null?'<span class="zero">n/m</span>':pctf(s.pq1)}</td>
+    <td class="num" style="padding-right:22px">${s.pq1==null?'<span class="zero">n/m</span>':pctf(s.pq1)}</td>
     <td class="num">${s.pq2==null?'<span class="zero">n/m</span>':pctf(s.pq2)}</td>
     <td class="num hidem ${chg}">${s.ret26==null?'-':(s.ret26>0?'+':'')+fmt(s.ret26)+'%'}</td>
     <td class="spinecell">${s.pct==null?'<span class="score">-</span>':`<span class="score">${fmt(s.pct)}%</span>`+spine(s)}</td>
