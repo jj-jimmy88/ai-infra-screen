@@ -38,8 +38,48 @@ UNIVERSE=[("MNTS","Momentus"),("RDW","Redwire"),("AMPG","AmpliTech Group"),("UMA
 ("DNN","Denison Mines"),("UUUU","Energy Fuels"),("LEU","Centrus Energy"),
 ("SIVE.ST","Sivers Semiconductors"),("TSEM","Tower Semiconductor"),("VST","Vistra"),
 ("TLN","Talen Energy"),("BWXT","BWX Technologies"),("SNPS","Synopsys"),("NOK","Nokia"),
-("MOG-A","Moog"),("USAR","USA Rare Earth"),("DRAM","Roundhill Memory ETF")]
+("MOG-A","Moog"),("USAR","USA Rare Earth"),
+("FTNT","Fortinet"),("ZS","Zscaler"),("S","SentinelOne"),("OKTA","Okta"),("CYBR","CyberArk"),
+("NET","Cloudflare"),("RBRK","Rubrik"),("ORCL","Oracle"),
+("6324.T","Harmonic Drive"),("6268.T","Nabtesco"),("SHA.DE","Schaeffler"),("2050.HK","Sanhua Intelligent"),
+("NJDCY","Nidec"),("ALGM","Allegro MicroSystems"),("MELE.BR","Melexis"),
+("DRAM","Roundhill Memory ETF")]
 ETF={"DRAM","URA"}
+# Thematic sector labels for the Sector column (falls back to Yahoo industry/sector if unmapped)
+SECTOR={
+ 'PANW':'Cybersecurity','CRWD':'Cybersecurity','FTNT':'Cybersecurity','ZS':'Cybersecurity','S':'Cybersecurity',
+ 'OKTA':'Cybersecurity','CYBR':'Cybersecurity','NET':'Cybersecurity','RBRK':'Cybersecurity','BB':'Cybersecurity',
+ 'PLTR':'AI Software','MSFT':'AI Software','IBM':'AI Software','ORCL':'AI Software','NBIS':'AI Software',
+ 'APLD':'AI Datacenter','IREN':'AI Datacenter','CORZ':'AI Datacenter','CRWV':'AI Datacenter',
+ 'NVDA':'AI Compute','AMD':'AI Compute','INTC':'AI Compute','AVGO':'AI Compute','QCOM':'AI Compute',
+ 'ARM':'AI Compute','ALAB':'AI Compute','CRDO':'AI Compute','MRVL':'AI Compute','ANET':'AI Compute',
+ 'HPE':'AI Compute','HPQ':'Hardware','STM':'Semiconductors',
+ 'MU':'Memory/Storage','SNDK':'Memory/Storage','WDC':'Memory/Storage','STX':'Memory/Storage',
+ '000660.KS':'Memory/Storage','DRAM':'Memory/Storage','SMCI':'AI Compute',
+ 'TSM':'Chip Foundry','GFS':'Chip Foundry','TSEM':'Chip Foundry',
+ 'AMAT':'Chip Equipment','ASML':'Chip Equipment','LRCX':'Chip Equipment','KLAC':'Chip Equipment','SNPS':'Chip EDA',
+ 'COHR':'Optical/Networking','LITE':'Optical/Networking','VIAV':'Optical/Networking','CIEN':'Optical/Networking',
+ 'AAOI':'Optical/Networking','FN':'Optical/Networking','IPGP':'Optical/Networking','GLW':'Optical/Networking',
+ 'HLIT':'Optical/Networking','NOK':'Optical/Networking','POET':'Optical/Networking','SIVE.ST':'Optical/Networking',
+ 'OCC':'Optical/Networking','AMPG':'Components','APH':'Components',
+ '6324.T':'Robotics','6268.T':'Robotics','SHA.DE':'Robotics','2050.HK':'Robotics','NJDCY':'Robotics',
+ 'MOG-A':'Robotics','ALGM':'Robotics','MELE.BR':'Robotics',
+ 'RKLB':'Space/Satellites','ASTS':'Space/Satellites','LUNR':'Space/Satellites','BKSY':'Space/Satellites',
+ 'SATL':'Space/Satellites','SPIR':'Space/Satellites','PL':'Space/Satellites','IRDM':'Space/Satellites',
+ 'SATS':'Space/Satellites','TSAT':'Space/Satellites','RDW':'Space/Satellites','SIDU':'Space/Satellites',
+ 'FLY':'Space/Satellites','MNTS':'Space/Satellites','SPCE':'Space/Satellites',
+ 'UMAC':'Drones','RCAT':'Drones','ONDS':'Drones','AVAV':'Defense',
+ 'LMT':'Defense','RTX':'Defense','NOC':'Defense','LHX':'Defense','KTOS':'Defense','MRCY':'Defense',
+ 'AMTM':'Defense','BWXT':'Nuclear','BA':'Aerospace','HXL':'Aerospace',
+ 'MP':'Rare Earths','USAR':'Rare Earths','LAC':'Critical Materials','TMQ':'Critical Materials',
+ 'CRML':'Critical Materials','SOLS':'Critical Materials','NSU.V':'Nuclear','FCX':'Materials',
+ 'PUSA':'Critical Materials','ATI':'Adv Materials',
+ 'OKLO':'Nuclear','SMR':'Nuclear','NNE':'Nuclear','CCJ':'Nuclear','UEC':'Nuclear','DNN':'Nuclear',
+ 'UUUU':'Nuclear','LEU':'Nuclear','URA':'Nuclear',
+ 'CEG':'Power','VST':'Power','TLN':'Power','GEV':'Power','ENR.DE':'Power','VRT':'Power','BE':'Power','EOSE':'Power',
+ 'IONQ':'Quantum','RGTI':'Quantum','QBTS':'Quantum',
+ 'NNDM':'Adv Manufacturing','PRLB':'Adv Manufacturing','TE':'Solar',
+}
 # MANUAL SECTION - edit when situations change, then re-run:
 VETO={"SMCI":"DOJ export-fraud indictment (Mar-2026) + securities class actions",
       "CRWV":"Active securities-fraud class action (demand/delay misrepresentation)"}
@@ -98,6 +138,7 @@ def fetch_fund():
             for a,b in [('forwardPE','fpe'),('marketCap','mcap'),('totalCash','cash'),('totalDebt','debt'),('numberOfAnalystOpinions','nA')]:
                 rec[b]=info.get(a)
             rec['fcur']=info.get('financialCurrency') or 'USD'
+            rec['industry']=info.get('industry'); rec['ysector']=info.get('sector')
         except Exception: pass
         try:
             tr=tk.eps_trend
@@ -116,7 +157,6 @@ def fetch_fund():
                 except Exception: pass
             rec['rev']=[u,d]
         except Exception: rec['rev']=[0,0]
-        # quarterly income stmt -> revenue, gross profit, net income + period labels
         try:
             q=tk.quarterly_income_stmt
             if q is not None and 'Total Revenue' in q.index:
@@ -136,7 +176,6 @@ def fetch_fund():
                         if not pd.isna(v): niq.append(float(v)); nidt.append(str(c)[:7])
                     rec['niq']=niq[:6]; rec['nidt']=nidt[:6]
         except Exception: pass
-        # annual income stmt -> latest FY revenue + net income + year
         try:
             a=tk.income_stmt
             if a is not None:
@@ -205,7 +244,7 @@ def fetch_precise():
 def fetch_news():
     import urllib.request
     def grab(t):
-        sym=t.replace('.','-') if t not in ('000660.KS','SIVE.ST','ENR.DE','NSU.V') else t
+        sym=t  # all tickers are already in Yahoo's native symbol format (e.g. MOG-A, 6324.T, SHA.DE)
         url=f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={sym}&region=US&lang=en-US"
         try:
             req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
@@ -288,9 +327,9 @@ def score(P,F,X):
         for k in WT:
             if sc[k] is not None: num+=WT[k]*sc[k]/MX[k]; den+=WT[k]
         r.update(sc)
-        # financials
         niq=f.get('niq') or []; nidt=f.get('nidt') or []
         r['fy_rev']=f.get('fy_rev'); r['fy_profit']=f.get('fy_profit'); r['fy_year']=f.get('fy_year'); r['fcur']=f.get('fcur','USD')
+        r['sector']=SECTOR.get(t) or f.get('industry') or f.get('ysector') or '\u2014'
         r['pq1']=qoq(niq[0],niq[1]) if len(niq)>=2 else None
         r['pq2']=qoq(niq[1],niq[2]) if len(niq)>=3 else None
         r['pq1lbl']=(f"{nidt[1]}\u2192{nidt[0]}" if len(nidt)>=2 else '')
@@ -298,7 +337,6 @@ def score(P,F,X):
         r['raw']={'rev90':rev90,'updn':f'{u}/{d}','surp':sp,'ra':ra,'revg':revg,'gmd':gmd,
                   'fwdrevg':fg,'evsg':evsg,'bs':bs,'disp':disp,'ins':ins}
         r['pct']=round(num/den*100,1) if den>0 else 0; r['wsc']=round(num,2); r['dataWt']=round(den,1)
-        # tailwind / headwind
         scored={k:sc[k] for k in WT if sc[k] is not None}
         if scored:
             twk=max(scored,key=lambda k:scored[k]/MX[k]); hwk=min(scored,key=lambda k:scored[k]/MX[k])
@@ -306,7 +344,6 @@ def score(P,F,X):
             r['hw']=HW[hwk] if scored[hwk]/MX[hwk]<=0.5 else 'No major weakness'
         else:
             r['tw']=None; r['hw']=None
-        # flag (consistent set)
         if t in VETO: r['flag']='VETO'; r['vetoReason']=VETO[t]
         elif isetf: r['flag']='ETF'
         elif r['price'] is None or den==0: r['flag']='NO DATA'
@@ -327,7 +364,6 @@ def main():
     print('fetching fundamentals...'); F=fetch_fund()
     print('fetching estimates/targets...'); X=fetch_precise()
     print('scoring...'); rows=score(P,F,X)
-    # convert foreign-currency FY revenue/profit to USD so the columns are comparable
     curs={r.get('fcur','USD') for r in rows if r.get('fcur') and r['fcur']!='USD'}
     fx={}
     for c in curs:
