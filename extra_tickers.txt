@@ -3,3 +3,4 @@
 # PLTR
 # The next weekly refresh (or a manual "Run workflow") scores it on all 10 factors.
 INFQ
+DDOG
